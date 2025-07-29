@@ -61,6 +61,12 @@
 			<artifactId>java-jwt</artifactId>
 			<version>4.4.0</version>
 		  </dependency>
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcpkix-jdk18on</artifactId>
+			<version>1.77</version>
+		</dependency>
+
 	</dependencies>
 
 

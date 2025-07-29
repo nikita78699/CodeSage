@@ -8,25 +8,25 @@ import java.util.Base64;
 import java.util.stream.Collectors;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import org.bouncycastle.util.io.pem.PemReader;
+import org.bouncycastle.util.io.pem.PemObject;
+
 
 public class PemUtils {
 
-    public static RSAPrivateKey readPrivateKeyFromPemFile(String pemFilePath) {
-        try {
-            InputStream is = PemUtils.class.getClassLoader().getResourceAsStream(pemFilePath);
-            if (is == null) {
-                throw new RuntimeException("PEM file not found: " + pemFilePath);
+    public static RSAPrivateKey readPrivateKeyFromPemFile(String classpathPath) {
+        try (InputStream inputStream = PemUtils.class.getClassLoader().getResourceAsStream(classpathPath)) {
+            if (inputStream == null) {
+                throw new RuntimeException("PEM file not found in classpath: " + classpathPath);
             }
 
-            String privateKeyPEM = new BufferedReader(new InputStreamReader(is))
-                    .lines()
-                    .filter(line -> !line.startsWith("-----"))
-                    .collect(Collectors.joining());
+            PemReader pemReader = new PemReader(new InputStreamReader(inputStream));
+            PemObject pemObject = pemReader.readPemObject();
+            byte[] content = pemObject.getContent();
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(content);
+            return (RSAPrivateKey) kf.generatePrivate(keySpec);
 
-            byte[] encoded = Base64.getDecoder().decode(privateKeyPEM);
-            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            return (RSAPrivateKey) keyFactory.generatePrivate(keySpec);
         } catch (Exception e) {
             throw new RuntimeException("Failed to load private key from PEM", e);
         }
