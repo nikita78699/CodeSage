@@ -40,6 +40,7 @@ public class PemUtils {
 
     private static byte[] convertPKCS1ToPKCS8(byte[] pkcs1Bytes) {
         try {
+            // Convert PKCS#1 format to PKCS#8 format
             // use fully qualified class name to avoid import conflict
             org.bouncycastle.asn1.pkcs.RSAPrivateKey bcPrivateKey =
                     org.bouncycastle.asn1.pkcs.RSAPrivateKey.getInstance(pkcs1Bytes);
