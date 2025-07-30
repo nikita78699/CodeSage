@@ -1,5 +1,6 @@
 package com.nikita.Codesage.util;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.KeyFactory;
@@ -16,27 +17,22 @@ import org.bouncycastle.util.io.pem.PemReader;
 
 public class PemUtils {
 
-    public static RSAPrivateKey readPrivateKeyFromPemFile(String classpathPath) {
-        try (InputStream inputStream = PemUtils.class.getClassLoader().getResourceAsStream(classpathPath)) {
-            if (inputStream == null) {
-                throw new RuntimeException("PEM file not found in classpath: " + classpathPath);
-            }
+    public static RSAPrivateKey readPrivateKeyFromPemFile(String filePath) {
+    try (InputStream inputStream = new FileInputStream(filePath)) {
+        PemReader pemReader = new PemReader(new InputStreamReader(inputStream));
+        PemObject pemObject = pemReader.readPemObject();
+        byte[] pkcs1Bytes = pemObject.getContent();
+        byte[] pkcs8Bytes = convertPKCS1ToPKCS8(pkcs1Bytes);
 
-            try (PemReader pemReader = new PemReader(new InputStreamReader(inputStream))) {
-                PemObject pemObject = pemReader.readPemObject();
-                byte[] pkcs1Bytes = pemObject.getContent();
-                byte[] pkcs8Bytes = convertPKCS1ToPKCS8(pkcs1Bytes);
-
-                KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-                PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pkcs8Bytes);
-                PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
-                return (RSAPrivateKey) privateKey;
-            }
-
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load private key from PEM", e);
-        }
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pkcs8Bytes);
+        PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
+        return (RSAPrivateKey) privateKey;
+    } catch (Exception e) {
+        throw new RuntimeException("Failed to load private key from PEM file path: " + filePath, e);
     }
+}
+
 
     private static byte[] convertPKCS1ToPKCS8(byte[] pkcs1Bytes) {
         try {
