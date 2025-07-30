@@ -2,6 +2,7 @@ package com.nikita.Codesage.service;
 
 import com.nikita.Codesage.util.PemUtils;
 import com.nikita.Codesage.util.GitHubAppTokenUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -18,14 +19,16 @@ public class GitHubService {
     private final String GITHUB_API_BASE_URL = "https://api.github.com";
     private final String APP_ID = "1679318"; // GitHub App ID
 
+    @Value("${github.pem.path}")
+    private String pemFilePath;
+
     public List<Map<String, Object>> getPullRequestFiles(String owner, String repo, String prNumber) {
         try {
-            // Step 1: Load private key from classpath
-            InputStream keyStream = getClass().getClassLoader().getResourceAsStream("util/private-key.pem");
-            RSAPrivateKey privateKey = PemUtils.readPrivateKeyFromPemFile(keyStream.toString());
+            // ✅ Step 1: Load private key from file path (not classpath)
+            RSAPrivateKey privateKey = PemUtils.readPrivateKeyFromPemFile(pemFilePath);
             String jwt = GitHubAppTokenUtil.generateJWT(APP_ID, privateKey);
 
-            // Step 2: Get installation ID
+            // (same as before)
             HttpHeaders jwtHeaders = new HttpHeaders();
             jwtHeaders.setBearerAuth(jwt);
             jwtHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
@@ -43,7 +46,6 @@ public class GitHubService {
 
             int installationId = (int) installations.get(0).get("id");
 
-            // Step 3: Exchange JWT for installation access token
             String tokenUrl = GITHUB_API_BASE_URL + "/app/installations/" + installationId + "/access_tokens";
             ResponseEntity<Map> tokenResponse = restTemplate.exchange(
                     tokenUrl, HttpMethod.POST, jwtEntity, Map.class
@@ -51,7 +53,6 @@ public class GitHubService {
 
             String installationToken = (String) tokenResponse.getBody().get("token");
 
-            // Step 4: Use installation token to get PR files
             String filesUrl = GITHUB_API_BASE_URL + "/repos/" + owner + "/" + repo + "/pulls/" + prNumber + "/files";
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(installationToken);
@@ -67,3 +68,4 @@ public class GitHubService {
         }
     }
 }
+
