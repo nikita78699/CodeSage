@@ -35,8 +35,7 @@ public class OpenAIService {
             "content", "You are a senior code reviewer."
         );
 
-        // Dummy change to test CodeSage PR review
-        //change
+    
 
         Map<String, Object> messageUser = Map.of(
             "role", "user",
@@ -49,8 +48,6 @@ public class OpenAIService {
         );
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
-
-        //another dummy change to test CodeSage PR review
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
             Map<String, Object> body = response.getBody();
