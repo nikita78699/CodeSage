@@ -27,6 +27,13 @@ public class WebHookController {
         this.gitHubCommentService = gitHubCommentService;
     }
 
+    //test for codeSage
+    //test for codeSage
+@GetMapping("/health")
+public ResponseEntity<String> healthCheck() {
+    return ResponseEntity.ok("CodeSage Webhook Service is running 🚀");
+}
+
     @PostMapping("/github")
     public ResponseEntity<String> handleGitHubWebhook(@RequestBody Map<String, Object> payload) {
         System.out.println("Received webhook: " + payload);
